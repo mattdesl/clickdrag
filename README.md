@@ -32,7 +32,9 @@ Options:
 
 The start (mousedown), move (mousemove and mousemove outside), and end (mouseup) events. 
 
-Each is called with the parameters `(event, offset, delta)`. The `event` is the original MouseEvent. The `offset` is an object with `x` and `y` values, relative to the element you passed at constructor. The `delta` has `x` and `y` delta from where the drag start originated.
+Each is emitted with the parameters `(event, offset, delta)`. The `event` is the original MouseEvent. The `offset` is an object with `x` and `y` values, relative to the element you passed at constructor. The `delta` has `x` and `y` delta from where the drag start originated.
+
+*Note:* Keep in mind that the MouseEvent's `target` may not match the element passed to the constructor, since the mousemove/mouseup events need to be triggered on its parent (or the document).
 
 ## License
 
