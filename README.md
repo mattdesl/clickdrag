@@ -22,7 +22,9 @@ Creates a new draggable emitter for the given element.
 
 Options:
 
-- `parent` the element or document to attach mouse outside events, defaults to `document`. This can also be an instance of `EventEmitter` (which emits `mousemove` and `mouseup` with MouseEvent objects) to avoid duplicating events on the document.
+- `parent` the element or document to attach mouse outside events, defaults to `document`. This can also be an instance of `EventEmitter` (which emits `mousemove` and `mouseup` with MouseEvent as parameter) to avoid duplicating mouse events on the document.
+
+## events
 
 #### `drag.on('start')`
 #### `drag.on('move')`
