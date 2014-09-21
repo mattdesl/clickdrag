@@ -12,15 +12,20 @@ function ClickDrag(element, opt) {
 	this.enabled = true
 	this.element = element
 	this._dragging = null
-	events.on(element, 'mousedown', mousedown.bind(this))
+
+	this._mousedown = mousedown.bind(this)
+	this._mousemove = mousemove.bind(this)
+	this._mouseup = mouseup.bind(this)
+	
+	events.on(element, 'mousedown', this._mousedown)
 
 	if (opt.parent instanceof EventEmitter) {
-		opt.parent.on('mousemove', mousemove.bind(this))
-		opt.parent.on('mouseup', mousemove.bind(this))
+		opt.parent.on('mousemove', this._mousemove)
+		opt.parent.on('mouseup', this._mouseup)
 	} else {
 		var parent = opt.parent || document
-		events.on(parent, 'mousemove', mousemove.bind(this))
-		events.on(parent, 'mouseup', mouseup.bind(this))
+		events.on(parent, 'mousemove', this._mousemove)
+		events.on(parent, 'mouseup', this._mouseup)
 	}
 }
 
