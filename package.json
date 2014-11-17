@@ -9,7 +9,7 @@
     "dom-events": "^0.1.1",
     "events": "^1.0.2",
     "inherits": "^2.0.1",
-    "mouse-event-offset": "^1.0.1"
+    "mouse-event-offset": "^2.0.0"
   },
   "devDependencies": {
     "dom-style": "0.0.3",
