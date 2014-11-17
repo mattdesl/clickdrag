@@ -1,6 +1,6 @@
 {
   "name": "clickdrag",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "generic low-level click and drag utility for DOM events",
   "main": "index.js",
   "license": "MIT",
