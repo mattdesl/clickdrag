@@ -30,7 +30,7 @@ require('domready')(function() {
 
 	var drag = draggable(container)
 	drag.on('start', function(ev, offset, delta) {	
-		console.log("Start drag", offset)
+		console.log("Start drag", offset, delta)
 	})
 	drag.on('move', function(ev, offset, delta) {
 		style(highlight, {

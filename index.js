@@ -2,6 +2,13 @@ var EventEmitter = require('events').EventEmitter
 var inherits = require('inherits')
 var events = require('dom-events')
 var offset = require('mouse-event-offset')
+var xtend = require('xtend')
+
+function wrapEvent(fn, element, instance) {
+	return function(name) {
+		fn(element, name, instance['_'+name])
+	}
+}
 
 function ClickDrag(element, opt) {
 	if (!(this instanceof ClickDrag)) 
@@ -13,43 +20,60 @@ function ClickDrag(element, opt) {
 	this.element = element
 	this._dragging = null
 
-	this._mousedown = mousedown.bind(this)
-	this._mousemove = mousemove.bind(this)
-	this._mouseup = mouseup.bind(this)
+	var touch = opt.touch
+	var parent = opt.parent || document
 
-	events.on(element, 'mousedown', this._mousedown)
+	//the events we're adding to the element & parent
+	var targets = ['mousedown']
+	var parentTargets = ['mousemove', 'mouseup']
 
-
-	if (opt.parent instanceof EventEmitter) {
-		opt.parent.on('mousemove', this._mousemove)
-		opt.parent.on('mouseup', this._mouseup)
-	} else {
-		opt.parent = opt.parent || document
-
-		events.on(opt.parent, 'mousemove', this._mousemove)
-		events.on(opt.parent, 'mouseup', this._mouseup)
+	//bind methods to this instance
+	this._mousedown = down.bind(this, null)
+	this._mousemove = move.bind(this, null)
+	this._mouseup = up.bind(this, null)
+	
+	//user requesting touch events
+	if (touch) {
+		targets.push('touchstart')
+		parentTargets.push('touchmove', 'touchend')
+		this._touchstart = down.bind(this, 'targetTouches')
+		this._touchmove = move.bind(this, 'targetTouches')
+		this._touchend = up.bind(this, 'changedTouches')	
 	}
+
+	//add the events to the element
+	targets.forEach(wrapEvent(events.on, element, this))
+	parentTargets.forEach(wrapEvent(events.on, parent, this))
+
+	this._targets = targets
+	this._parentTargets = parentTargets
 	this._parent = opt.parent
 }
 
 inherits(ClickDrag, EventEmitter)
 
-ClickDrag.prototype.dispose = function() {
-	if (this._parent instanceof EventEmitter) {
-		this._parent.off('mousemove', this._mousemove)
-		this._parent.off('mouseup', this._mouseup)
-	} else {
-		events.off(this._parent, 'mousemove', this._mousemove)
-		events.off(this._parent, 'mouseup', this._mouseup)
-	}
+ClickDrag.prototype._emit = function(name, ev, clientType) {
+	var client
+	if (clientType && ev[clientType])
+		client = ev[clientType][0]
 
-	if (this.element && this.element.parentNode) 
-		this.element.parentNode.removeChild(this.element)
-	this.element = null
+	//merge with client rect to avoid target issues
+    client = xtend(client, {
+    	clientRect: this.element.getBoundingClientRect()
+    })
+
+    var pos = offset(ev, client)
+    if (name === 'start')
+        this._start = pos
+    
+    var dt = delta(pos, this._start)
+    this.emit(name, ev, pos, dt)
 }
 
-function getOffset(ev, element) {
-	return offset(ev, { clientRect: element.getBoundingClientRect() }) 
+ClickDrag.prototype.dispose = function() {
+	this._targets.forEach(wrapEvent(events.off, this.element, this))
+	this._parentTargets.forEach(wrapEvent(events.off, this._parent, this))
+	this.element = null
 }
 
 function empty() {
@@ -63,38 +87,34 @@ function delta(start, off) {
 	return d
 }
 
-function mousedown(ev) {
+function down(clientType, ev) {
 	if (!this.enabled) 
 		return
 
 	if (this._dragging === null) {
-		this._dragging = ev.button
-		var off = getOffset(ev, this.element)
-		this._start = off
-
-		this.emit('start', ev, off, empty())
+		this._dragging = clientType ? true : ev.button
+		this._emit('start', ev, clientType)
 	}
 }
 
-function mousemove(ev) {
+function move(clientType, ev) {
 	if (!this.enabled)
 		return
 
-	if (this._dragging === ev.button) {
-		var off = getOffset(ev, this.element)
-		var d = delta(off, this._start)
-		this.emit('move', ev, off, d)
+	var expected = clientType ? true : ev.button
+	if (this._dragging === expected) {
+		this._emit('move', ev, clientType)
 	}
 }
 
-function mouseup(ev) {
+function up(clientType, ev) {
 	if (!this.enabled)
 		return
-	if (this._dragging === ev.button) {
+
+	var expected = clientType ? true : ev.button
+	if (this._dragging === expected) {
 		this._dragging = null
-		var off = getOffset(ev, this.element)
-		var d = delta(off, this._start)
-		this.emit('end', ev, off, d)
+		this._emit('end', ev, clientType)
 	}
 }
 
