@@ -48,7 +48,7 @@ function ClickDrag(element, opt) {
 
 	this._targets = targets
 	this._parentTargets = parentTargets
-	this._parent = opt.parent
+	this._parent = parent
 }
 
 inherits(ClickDrag, EventEmitter)
