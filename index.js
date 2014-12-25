@@ -19,6 +19,7 @@ function ClickDrag(element, opt) {
 	this.enabled = true
 	this.element = element
 	this._dragging = null
+	this._touchOnly = false
 
 	var touch = opt.touch
 	var parent = opt.parent || document
@@ -88,8 +89,14 @@ function delta(start, off) {
 }
 
 function down(clientType, ev) {
-	if (!this.enabled) 
+	if (!this.enabled || (!clientType && this._touchOnly)) 
 		return
+
+	//touch events work, stop listening for mouse
+	//to avoid duplicate emits
+	if (clientType) {
+		this._touchOnly = true
+	}
 
 	if (this._dragging === null) {
 		this._dragging = clientType ? true : ev.button
@@ -98,7 +105,7 @@ function down(clientType, ev) {
 }
 
 function move(clientType, ev) {
-	if (!this.enabled)
+	if (!this.enabled || (!clientType && this._touchOnly)) 
 		return
 
 	var expected = clientType ? true : ev.button
@@ -108,7 +115,7 @@ function move(clientType, ev) {
 }
 
 function up(clientType, ev) {
-	if (!this.enabled)
+	if (!this.enabled || (!clientType && this._touchOnly)) 
 		return
 
 	var expected = clientType ? true : ev.button
